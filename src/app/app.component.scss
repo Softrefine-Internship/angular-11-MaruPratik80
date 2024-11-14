@@ -1,0 +1,14 @@
+.level {
+  display: flex;
+  justify-content: center;
+}
+
+.employee-card {
+  border: 1px solid hsl(193, 19%, 17%);
+  transition: all 0.2s;
+
+  &.active {
+    background-color: #aad7e6;
+    border-color: #262d2f;
+  }
+}
