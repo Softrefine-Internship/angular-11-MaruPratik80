@@ -1,104 +1,90 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Employee } from './employee.model';
+import { animate, style, transition, trigger } from '@angular/animations';
+import { MatDialog } from '@angular/material/dialog';
+import { RemoveDialogComponent } from './remove-dialog/remove-dialog.component';
+import { EmployeeService } from './employee.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-root',
-  standalone: false,
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
+  animations: [
+    trigger('opacity', [transition('* => void', [animate(150, style({ opacity: 0 }))])]),
+    trigger('vertical', [
+      transition('void => *', [style({ opacity: 0, scale: '1 0.2' }), animate(250)]),
+      transition('* => void', [animate(100, style({ opacity: 0, scale: '1 0.2' }))]),
+    ]),
+    trigger('horizontal', [
+      transition('void => *', [style({ opacity: 0, scale: '0 1' }), animate(250)]),
+      transition('* => void', [animate(150, style({ opacity: 0, scale: '0 1' }))]),
+    ]),
+  ],
 })
-export class AppComponent {
-  levels: (number | null)[] = [null];
+export class AppComponent implements OnInit, OnDestroy {
+  levels: number[][] = [];
+  employees!: Employee[];
+  subscription!: Subscription;
 
-  employees: Employee[] = [
-    {
-      id: 1,
-      name: 'John Doe',
-      managerId: null,
-      imageUrl: 'https://via.placeholder.com/150',
-      email: 'john.doe@example.com',
-      subordinates: [2, 3],
-      designation: 'CEO',
-      active: false,
-    },
-    {
-      id: 2,
-      name: 'Jane Smith',
-      managerId: 1,
-      imageUrl: 'https://via.placeholder.com/150',
-      email: 'jane.smith@example.com',
-      subordinates: [4, 5],
-      designation: 'CTO',
-      active: false,
-    },
-    {
-      id: 3,
-      name: 'Bob Johnson',
-      managerId: 1,
-      imageUrl: 'https://via.placeholder.com/150',
-      email: 'bob.johnson@example.com',
-      subordinates: [6],
-      designation: 'CFO',
-      active: false,
-    },
-    {
-      id: 4,
-      name: 'Alice Brown',
-      managerId: 2,
-      imageUrl: 'https://via.placeholder.com/150',
-      email: 'alice.brown@example.com',
-      subordinates: [8, 9],
-      designation: 'Engineering Manager',
-      active: false,
-    },
-    {
-      id: 5,
-      name: 'Charlie White',
-      managerId: 2,
-      imageUrl: 'https://via.placeholder.com/150',
-      email: 'charlie.white@example.com',
-      subordinates: [10, 11],
-      designation: 'Product Manager',
-      active: false,
-    },
-    {
-      id: 6,
-      name: 'David Black',
-      managerId: 3,
-      imageUrl: 'https://via.placeholder.com/150',
-      email: 'david.black@example.com',
-      subordinates: [7],
-      designation: 'Finance Manager',
-      active: false,
-    },
-    {
-      id: 7,
-      name: 'Eva Green',
-      managerId: 6,
-      imageUrl: 'https://via.placeholder.com/150',
-      email: 'eva.green@example.com',
-      subordinates: null,
-      designation: 'Accountant',
-      active: false,
-    },
-  ];
+  constructor(private employeeService: EmployeeService, private dialog: MatDialog) {}
 
-  showSubordinates(employee: Employee) {
-    employee.active = !employee.active;
-    const colleges = this.employees.find(
-      (e) => e.id === employee.managerId
-    )?.subordinates;
-    if (employee.active) this.levels.push(employee.id);
-    else {
-      const index = this.levels.indexOf(employee.id);
-      if (index !== -1) this.levels.splice(index);
-    }
+  ngOnInit(): void {
+    this.subscription = this.employeeService.emploeeChanged.subscribe(employees => {
+      this.employees = employees;
+    });
+    this.employees = this.employeeService.employees;
+    this.start();
   }
 
-  getSubordinates(managerId: number) {
-    const subordinates =
-      this.employees.filter((e) => e.managerId === managerId) ||
-      this.employees[0];
-    return subordinates;
+  showSubordinates(employee: Employee) {
+    if (!employee.subordinates) return;
+    employee.active = !employee.active;
+
+    const index = this.levels.findIndex(level => level.includes(employee.id));
+    const inactiveIds = this.levels
+      .slice(index)
+      .flat()
+      .filter(id => id !== employee.id);
+    this.employees.forEach(e => {
+      if (inactiveIds.includes(e.id)) e.active = false;
+    });
+    this.levels.splice(index + 1);
+
+    if (employee.active && employee.subordinates) this.levels.push(employee.subordinates);
+  }
+
+  start() {
+    const manager = this.employees.find(e => e.managerId === null)!;
+    this.levels.push([manager.id]);
+  }
+
+  getSubordinates(ids: number[]) {
+    return this.employees.filter(e => ids.includes(e.id));
+  }
+
+  openRemoveDialog(employee: Employee) {
+    const dialogRef = this.dialog.open(RemoveDialogComponent, { data: employee });
+    dialogRef.afterClosed().subscribe((removed: Employee) => {
+      if (!removed) return;
+      console.log(this.employees, this.levels);
+      const manager = this.employees.find(e => e.id === employee.managerId);
+      console.log(manager);
+      console.log(this.levels[this.levels.length - 1]);
+      if (this.levels[this.levels.length - 1].length === 1) {
+        this.levels.pop();
+        if (manager) {
+          manager.active = false;
+          return;
+        }
+      } else {
+        this.levels[this.levels.length - 1] = manager?.subordinates as number[];
+      }
+      console.log(this.employees, this.levels);
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.subscription.unsubscribe();
   }
 }

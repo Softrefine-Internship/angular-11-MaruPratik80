@@ -1,53 +1,48 @@
-<ng-container *ngFor="let managerId of levels">
-  <ng-container
-    *ngTemplateOutlet="levelTemplate; context: { $implicit: managerId }"
-  ></ng-container>
-</ng-container>
+<button mat-raised-button color="primary" class="start" *ngIf="levels.length === 0" (click)="start()">
+  Start Organization Hierarchy
+</button>
 
-<ng-template #levelTemplate let-managerId>
-  <div class="level">
-    <ng-container *ngFor="let employee of getSubordinates(managerId)">
-      <ng-container
-        *ngTemplateOutlet="employeeTemplate; context: { $implicit: employee }"
-      ></ng-container
+<ng-container *ngFor="let ids of levels; let i = index">
+  <div class="level" [@opacity]>
+    <ng-container *ngFor="let employee of getSubordinates(ids)">
+      <ng-container *ngTemplateOutlet="employeeTemplate; context: { $implicit: employee }"></ng-container
     ></ng-container>
   </div>
-</ng-template>
+  <span class="branch branch--h" [@horizontal] *ngIf="i < levels.length - 1"></span>
+</ng-container>
 
 <ng-template #employeeTemplate let-employee>
-  <mat-card
-    (click)="showSubordinates(employee)"
-    class="employee-card"
-    [ngClass]="{ active: employee.active }"
-  >
-    <mat-card-header>
-      <img
-        mat-card-avatar
-        class="example-header-image"
-        [src]="employee.imageUrl"
-      />
-      <mat-card-title>{{ employee.name }}</mat-card-title>
-      <mat-card-subtitle>{{ employee.designation }}</mat-card-subtitle>
-    </mat-card-header>
-    <mat-card-content>
-      <p>Email: {{ employee.email }}</p>
-      <p *ngIf="employee.managerId">Manager Id: {{ employee.managerId }}</p>
-      <p *ngIf="employee.subordinates">
-        Subordinates: {{ employee.subordinates?.length }}
-      </p>
-    </mat-card-content>
-    <mat-card-actions>
-      <button
-        mat-button
-        color="primary"
-        [disabled]="employee.subordinates?.length === 5"
-      >
-        Add
-      </button>
-      <button mat-button color="warn" [disabled]="employee.subordinates">
-        Remove
-      </button>
-      <button mat-button color="accent">Change</button>
-    </mat-card-actions>
-  </mat-card>
+  <div class="employee">
+    <span class="branch branch--top" [@vertical] *ngIf="employee.managerId"></span>
+    <mat-card
+      [@vertical]
+      (click)="showSubordinates(employee)"
+      class="employee__card"
+      [ngClass]="{ active: employee.active }"
+    >
+      <mat-card-header>
+        <img mat-card-avatar class="example-header-image" [src]="employee.imageUrl" />
+        <mat-card-title>{{ employee.name }}</mat-card-title>
+        <mat-card-subtitle>{{ employee.designation }}</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <p>Email: {{ employee.email }}</p>
+        <p *ngIf="employee.managerId">Manager Id: {{ employee.managerId }}</p>
+        <p *ngIf="employee.subordinates">Subordinates: {{ employee.subordinates?.length }}</p>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-button color="primary" [disabled]="employee.subordinates?.length === 5">Add</button>
+        <button
+          mat-button
+          color="warn"
+          [disabled]="employee.subordinates"
+          (click)="openRemoveDialog(employee)"
+        >
+          Remove
+        </button>
+        <button mat-button color="accent" *ngIf="!employee.managerId">Change</button>
+      </mat-card-actions>
+    </mat-card>
+    <span class="branch branch--bottom" [@vertical] *ngIf="employee.active"></span>
+  </div>
 </ng-template>
