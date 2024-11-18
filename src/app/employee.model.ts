@@ -7,4 +7,12 @@ export interface Employee {
   subordinates: number[] | null;
   designation: string;
   active: boolean;
+  firebaseKey?: string;
+}
+
+export interface EmployeeFormData {
+  name: string;
+  imageUrl: string;
+  email: string;
+  designation: string;
 }

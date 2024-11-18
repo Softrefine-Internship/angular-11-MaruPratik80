@@ -1,10 +1,12 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { Employee } from './employee.model';
+import { Component, OnInit } from '@angular/core';
 import { animate, style, transition, trigger } from '@angular/animations';
 import { MatDialog } from '@angular/material/dialog';
-import { RemoveDialogComponent } from './remove-dialog/remove-dialog.component';
+
 import { EmployeeService } from './employee.service';
-import { Subscription } from 'rxjs';
+import { Employee } from './employee.model';
+import { AddSubordinateDialogComponent } from './add-subordinate-dialog/add-subordinate-dialog.component';
+import { RemoveDialogComponent } from './remove-dialog/remove-dialog.component';
+import { ChangeManagerDialogComponent } from './change-manager-dialog/change-manager-dialog.component';
 
 @Component({
   selector: 'app-root',
@@ -18,23 +20,35 @@ import { Subscription } from 'rxjs';
     ]),
     trigger('horizontal', [
       transition('void => *', [style({ opacity: 0, scale: '0 1' }), animate(250)]),
-      transition('* => void', [animate(150, style({ opacity: 0, scale: '0 1' }))]),
+      transition('* => void', [animate(100, style({ opacity: 0, scale: '0 1' }))]),
     ]),
   ],
 })
-export class AppComponent implements OnInit, OnDestroy {
+export class AppComponent implements OnInit {
   levels: number[][] = [];
   employees!: Employee[];
-  subscription!: Subscription;
 
   constructor(private employeeService: EmployeeService, private dialog: MatDialog) {}
 
   ngOnInit(): void {
-    this.subscription = this.employeeService.emploeeChanged.subscribe(employees => {
-      this.employees = employees;
+    this.employeeService.fetchEmployees().subscribe(() => {
+      this.employees = this.employeeService.employees;
     });
-    this.employees = this.employeeService.employees;
-    this.start();
+  }
+
+  start() {
+    const manager = this.employees.find(e => !e.managerId);
+    if (manager) {
+      console.log(manager);
+      this.levels.push([manager.id]);
+      return;
+    }
+    const dialogRef = this.dialog.open(AddSubordinateDialogComponent);
+    dialogRef.afterClosed().subscribe(id => this.levels.push([id]));
+  }
+
+  getSubordinates(ids: number[]) {
+    return this.employees.filter(e => ids.includes(e.id));
   }
 
   showSubordinates(employee: Employee) {
@@ -54,37 +68,32 @@ export class AppComponent implements OnInit, OnDestroy {
     if (employee.active && employee.subordinates) this.levels.push(employee.subordinates);
   }
 
-  start() {
-    const manager = this.employees.find(e => e.managerId === null)!;
-    this.levels.push([manager.id]);
+  openAddSubordinateDialog(manager: Employee, event: MouseEvent) {
+    event.stopPropagation();
+    if (manager.subordinates?.length === 5) return;
+    this.dialog.open(AddSubordinateDialogComponent, { data: manager });
   }
 
-  getSubordinates(ids: number[]) {
-    return this.employees.filter(e => ids.includes(e.id));
-  }
+  openRemoveDialog(employee: Employee, event: MouseEvent) {
+    event.stopPropagation();
+    if (employee.subordinates) return;
 
-  openRemoveDialog(employee: Employee) {
-    const dialogRef = this.dialog.open(RemoveDialogComponent, { data: employee });
-    dialogRef.afterClosed().subscribe((removed: Employee) => {
-      if (!removed) return;
-      console.log(this.employees, this.levels);
-      const manager = this.employees.find(e => e.id === employee.managerId);
-      console.log(manager);
-      console.log(this.levels[this.levels.length - 1]);
-      if (this.levels[this.levels.length - 1].length === 1) {
-        this.levels.pop();
-        if (manager) {
-          manager.active = false;
-          return;
-        }
-      } else {
-        this.levels[this.levels.length - 1] = manager?.subordinates as number[];
-      }
-      console.log(this.employees, this.levels);
+    const dialogRef = this.dialog.open(RemoveDialogComponent, {
+      data: employee,
+      disableClose: false,
+    });
+    dialogRef.afterClosed().subscribe(removeLevel => {
+      if (removeLevel) this.levels.pop();
     });
   }
 
-  ngOnDestroy(): void {
-    this.subscription.unsubscribe();
+  openChangeManagerDialog(manager: Employee, event: MouseEvent) {
+    event.stopPropagation();
+    this.dialog.open(ChangeManagerDialogComponent, {
+      data: manager,
+      width: '50vw',
+      minWidth: '32rem',
+      exitAnimationDuration: 250,
+    });
   }
 }

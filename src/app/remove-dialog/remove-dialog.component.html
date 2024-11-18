@@ -1,13 +1,13 @@
 <header class="header">
-  <h2 mat-dialog-title><mat-icon color="warn">delete</mat-icon>Remove</h2>
-  <button class="btn-close" (click)="dialogRef.close()"><mat-icon>close</mat-icon></button>
+  <h2 mat-dialog-title>Remove Employee</h2>
+  <button mat-icon-button (click)="dialogRef.close()"><mat-icon>close</mat-icon></button>
 </header>
 <mat-dialog-content>
   <p>
     Are you sure you want to remove <strong>{{ dialogData.name }}</strong> ?
   </p>
 </mat-dialog-content>
-<mat-dialog-actions align="end">
-  <button mat-raised-button color="warn" (click)="remove()">Remove</button>
+<mat-dialog-actions align="end" class="actions">
+  <button mat-raised-button color="warn" (click)="onRemove()">Remove</button>
   <button mat-raised-button (click)="dialogRef.close()">Cancel</button>
 </mat-dialog-actions>

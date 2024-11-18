@@ -1,0 +1,31 @@
+<header class="header">
+  <h2 mat-dialog-title>Select Reporting Manager</h2>
+  <button mat-icon-button (click)="dialogRef.close()"><mat-icon>close</mat-icon></button>
+</header>
+<mat-dialog-content>
+  <form>
+    <mat-form-field appearance="outline" class="full-width">
+      <input
+        placeholder="Start typing to choose manager"
+        matInput
+        [formControl]="manager"
+        [matAutocomplete]="auto"
+      />
+      <mat-autocomplete
+        autoActiveFirstOption
+        autoSelectActiveOption
+        hideSingleSelectionIndicator
+        #auto="matAutocomplete"
+        [displayWith]="displayFn"
+      >
+        <mat-option *ngFor="let option of filteredOptions | async" [value]="option"
+          >{{ option.str }}
+        </mat-option>
+      </mat-autocomplete>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end" class="actions">
+  <button mat-raised-button color="primary" (click)="onSave()">Save</button>
+  <button mat-raised-button (click)="dialogRef.close()">Cancel</button>
+</mat-dialog-actions>

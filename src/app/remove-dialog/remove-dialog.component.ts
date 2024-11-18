@@ -15,8 +15,8 @@ export class RemoveDialogComponent {
     @Inject(MAT_DIALOG_DATA) public dialogData: Employee
   ) {}
 
-  remove() {
-    this.employeeService.removeEmployee(this.dialogData);
-    this.dialogRef.close(this.dialogData);
+  onRemove() {
+    const removeLevel = this.employeeService.removeEmployee(this.dialogData);
+    this.dialogRef.close(removeLevel);
   }
 }

@@ -8,12 +8,12 @@
       <ng-container *ngTemplateOutlet="employeeTemplate; context: { $implicit: employee }"></ng-container
     ></ng-container>
   </div>
-  <span class="branch branch--h" [@horizontal] *ngIf="i < levels.length - 1"></span>
+  <span class="edge edge--h" [@horizontal] *ngIf="i < levels.length - 1"></span>
 </ng-container>
 
 <ng-template #employeeTemplate let-employee>
   <div class="employee">
-    <span class="branch branch--top" [@vertical] *ngIf="employee.managerId"></span>
+    <span class="edge edge--top" [@vertical] *ngIf="employee.managerId"></span>
     <mat-card
       [@vertical]
       (click)="showSubordinates(employee)"
@@ -31,18 +31,32 @@
         <p *ngIf="employee.subordinates">Subordinates: {{ employee.subordinates?.length }}</p>
       </mat-card-content>
       <mat-card-actions>
-        <button mat-button color="primary" [disabled]="employee.subordinates?.length === 5">Add</button>
+        <button
+          mat-button
+          color="primary"
+          [disabled]="employee.subordinates?.length === 5"
+          (click)="openAddSubordinateDialog(employee, $event)"
+        >
+          Add
+        </button>
         <button
           mat-button
           color="warn"
           [disabled]="employee.subordinates"
-          (click)="openRemoveDialog(employee)"
+          (click)="openRemoveDialog(employee, $event)"
         >
           Remove
         </button>
-        <button mat-button color="accent" *ngIf="!employee.managerId">Change</button>
+        <button
+          mat-button
+          color="accent"
+          *ngIf="!employee.managerId"
+          (click)="openChangeManagerDialog(employee, $event)"
+        >
+          Change
+        </button>
       </mat-card-actions>
     </mat-card>
-    <span class="branch branch--bottom" [@vertical] *ngIf="employee.active"></span>
+    <span class="edge edge--bottom" [@vertical] *ngIf="employee.active"></span>
   </div>
 </ng-template>
