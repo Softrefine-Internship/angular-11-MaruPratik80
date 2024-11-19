@@ -36,10 +36,9 @@ export class AppComponent implements OnInit {
     });
   }
 
-  start() {
+  onStart() {
     const manager = this.employees.find(e => !e.managerId);
     if (manager) {
-      console.log(manager);
       this.levels.push([manager.id]);
       return;
     }

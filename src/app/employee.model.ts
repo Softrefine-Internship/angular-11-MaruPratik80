@@ -7,10 +7,10 @@ export interface Employee {
   subordinates: number[] | null;
   designation: string;
   active: boolean;
-  firebaseKey?: string;
+  firebaseKey: string;
 }
 
-export interface EmployeeFormData {
+export interface EmployeeDetails {
   name: string;
   imageUrl: string;
   email: string;

@@ -10,11 +10,14 @@
   display: flex;
   justify-content: space-evenly;
   gap: 2rem;
+  overflow-y: hidden;
+  overflow-x: auto;
 
   .employee {
     position: relative;
 
     &__card {
+      width: 28rem;
       border: 1px solid #233034;
       transition-property: border-color, background-color;
       transition-duration: 0.4s;
@@ -27,6 +30,32 @@
         background-color: hsl(199, 48%, 91%);
         border-color: #262d2f;
       }
+    }
+
+    &__header {
+      padding-bottom: 1rem;
+    }
+
+    &__name,
+    &__designation,
+    &__email {
+      text-wrap: pretty;
+      hyphens: auto;
+    }
+
+    &__name {
+      font-size: 1.8rem;
+    }
+  }
+
+  &:first-child {
+    .employee__content {
+      height: 8rem;
+    }
+  }
+  &:not(:first-child) {
+    .employee__content {
+      height: 10.5rem;
     }
   }
 
